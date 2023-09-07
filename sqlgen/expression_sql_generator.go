@@ -374,6 +374,10 @@ func (esg *expressionSQLGenerator) literalBytes(b sb.SQLBuilder, bs []byte) {
 
 // Generates SQL for a slice of values (e.g. []int64{1,2,3,4} -> (1,2,3,4)/{1,2,3,4}
 func (esg *expressionSQLGenerator) sliceValueSQL(b sb.SQLBuilder, slice reflect.Value) {
+	if slice.Len() == 0 {
+		b.Write(esg.dialectOptions.EmptySliceFragment)
+		return
+	}
 	b.Write(esg.dialectOptions.LeftSliceFragment)
 	for i, l := 0, slice.Len(); i < l; i++ {
 		esg.Generate(b, slice.Index(i).Interface())
