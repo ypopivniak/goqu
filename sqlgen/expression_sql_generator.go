@@ -374,14 +374,14 @@ func (esg *expressionSQLGenerator) literalBytes(b sb.SQLBuilder, bs []byte) {
 
 // Generates SQL for a slice of values (e.g. []int64{1,2,3,4} -> (1,2,3,4)/{1,2,3,4}
 func (esg *expressionSQLGenerator) sliceValueSQL(b sb.SQLBuilder, slice reflect.Value) {
-	b.WriteRunes(esg.dialectOptions.LeftSliceRune)
+	b.Write(esg.dialectOptions.LeftSliceFragment)
 	for i, l := 0, slice.Len(); i < l; i++ {
 		esg.Generate(b, slice.Index(i).Interface())
 		if i < l-1 {
 			b.WriteRunes(esg.dialectOptions.CommaRune, esg.dialectOptions.SpaceRune)
 		}
 	}
-	b.WriteRunes(esg.dialectOptions.RightSliceRune)
+	b.Write(esg.dialectOptions.RightSliceFragment)
 }
 
 // Generates SQL for an AliasedExpression (e.g. I("a").As("b") -> "a" AS "b")

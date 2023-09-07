@@ -187,10 +187,10 @@ type (
 		LeftParenRune rune
 		// Right paren rune (DEFAULT=')')
 		RightParenRune rune
-		// Left slice rune (DEFAULT='{')
-		LeftSliceRune rune
-		// Right slice rune (DEFAULT='}')
-		RightSliceRune rune
+		// Left slice rune (DEFAULT='ARRAY[')
+		LeftSliceFragment []byte
+		// Right slice rune (DEFAULT=']')
+		RightSliceFragment []byte
 		// Star rune (DEFAULT='*')
 		StarRune rune
 		// Period rune (DEFAULT='.')
@@ -502,8 +502,8 @@ func DefaultDialectOptions() *SQLDialectOptions {
 		SpaceRune:           ' ',
 		LeftParenRune:       '(',
 		RightParenRune:      ')',
-		LeftSliceRune:       '(',
-		RightSliceRune:      ')',
+		LeftSliceFragment:   []byte("("),
+		RightSliceFragment:  []byte(")"),
 		StarRune:            '*',
 		PeriodRune:          '.',
 		EmptyString:         "",
