@@ -265,19 +265,19 @@ func (ids *insertDatasetSuite) TestVals() {
 			ds: bd.Vals(val1),
 			clauses: exp.NewInsertClauses().
 				SetInto(goqu.C("items")).
-				SetVals([][]interface{}{val1}),
+				SetVals([]exp.Vals{val1}),
 		},
 		insertTestCase{
 			ds: bd.Vals(val1, val2),
 			clauses: exp.NewInsertClauses().
 				SetInto(goqu.C("items")).
-				SetVals([][]interface{}{val1, val2}),
+				SetVals([]exp.Vals{val1, val2}),
 		},
 		insertTestCase{
 			ds: bd.Vals(val1).Vals(val2),
 			clauses: exp.NewInsertClauses().
 				SetInto(goqu.C("items")).
-				SetVals([][]interface{}{val1, val2}),
+				SetVals([]exp.Vals{val1, val2}),
 		},
 		insertTestCase{
 			ds:      bd,
@@ -298,7 +298,7 @@ func (ids *insertDatasetSuite) TestClearVals() {
 		},
 		insertTestCase{
 			ds:      bd,
-			clauses: exp.NewInsertClauses().SetInto(goqu.C("items")).SetVals([][]interface{}{val}),
+			clauses: exp.NewInsertClauses().SetInto(goqu.C("items")).SetVals([]exp.Vals{val}),
 		},
 	)
 }

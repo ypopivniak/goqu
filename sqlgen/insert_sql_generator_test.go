@@ -83,7 +83,7 @@ func (igs *insertSQLGeneratorSuite) TestGenerate_nilValues() {
 	ic := exp.NewInsertClauses().
 		SetInto(exp.NewIdentifierExpression("", "test", "")).
 		SetCols(exp.NewColumnListExpression("a")).
-		SetVals([][]interface{}{
+		SetVals([]exp.Vals{
 			{nil},
 		})
 
@@ -107,14 +107,14 @@ func (igs *insertSQLGeneratorSuite) TestGenerate_colsAndVals() {
 	ic := exp.NewInsertClauses().
 		SetInto(exp.NewIdentifierExpression("", "test", "")).
 		SetCols(exp.NewColumnListExpression("a", "b")).
-		SetVals([][]interface{}{
+		SetVals([]exp.Vals{
 			{"a1", "b1"},
 			{"a2", "b2"},
 			{"a3", "b3"},
 		})
 
 	bic := ic.SetCols(exp.NewColumnListExpression("a", "b")).
-		SetVals([][]interface{}{
+		SetVals([]exp.Vals{
 			{"a1"},
 			{"a2", "b2"},
 			{"a3", "b3"},
@@ -144,7 +144,7 @@ func (igs *insertSQLGeneratorSuite) TestGenerate_withNoInto() {
 
 	ic := exp.NewInsertClauses().
 		SetCols(exp.NewColumnListExpression("a", "b")).
-		SetVals([][]interface{}{
+		SetVals([]exp.Vals{
 			{"a1", "b1"},
 			{"a2", "b2"},
 			{"a3", "b3"},
@@ -252,7 +252,7 @@ func (igs *insertSQLGeneratorSuite) TestGenerate_onConflict() {
 	ic := exp.NewInsertClauses().
 		SetInto(exp.NewIdentifierExpression("", "test", "")).
 		SetCols(exp.NewColumnListExpression("a")).
-		SetVals([][]interface{}{
+		SetVals([]exp.Vals{
 			{"a1"},
 		})
 	icDn := ic.SetOnConflict(exp.NewDoNothingConflictExpression())
@@ -449,7 +449,7 @@ func (igs *insertSQLGeneratorSuite) TestGenerate_withReturning() {
 	ic := exp.NewInsertClauses().
 		SetInto(exp.NewIdentifierExpression("", "test", "")).
 		SetCols(exp.NewColumnListExpression("a", "b")).
-		SetVals([][]interface{}{
+		SetVals([]exp.Vals{
 			{"a1", "b1"},
 		}).
 		SetReturning(exp.NewColumnListExpression("a", "b"))

@@ -122,6 +122,13 @@ func (esg *expressionSQLGenerator) Generate(b sb.SQLBuilder, val interface{}) {
 			return
 		}
 		esg.Generate(b, dVal)
+	case exp.Vals:
+		for i, l := 0, len(v); i < l; i++ {
+			esg.Generate(b, v)
+			if i < l-1 {
+				b.WriteRunes(esg.dialectOptions.CommaRune, esg.dialectOptions.SpaceRune)
+			}
+		}
 	default:
 		esg.reflectSQL(b, val)
 	}
@@ -365,16 +372,16 @@ func (esg *expressionSQLGenerator) literalBytes(b sb.SQLBuilder, bs []byte) {
 	b.WriteRunes(esg.dialectOptions.StringQuote)
 }
 
-// Generates SQL for a slice of values (e.g. []int64{1,2,3,4} -> (1,2,3,4)
+// Generates SQL for a slice of values (e.g. []int64{1,2,3,4} -> (1,2,3,4)/{1,2,3,4}
 func (esg *expressionSQLGenerator) sliceValueSQL(b sb.SQLBuilder, slice reflect.Value) {
-	b.WriteRunes(esg.dialectOptions.LeftParenRune)
+	b.WriteRunes(esg.dialectOptions.LeftSliceRune)
 	for i, l := 0, slice.Len(); i < l; i++ {
 		esg.Generate(b, slice.Index(i).Interface())
 		if i < l-1 {
 			b.WriteRunes(esg.dialectOptions.CommaRune, esg.dialectOptions.SpaceRune)
 		}
 	}
-	b.WriteRunes(esg.dialectOptions.RightParenRune)
+	b.WriteRunes(esg.dialectOptions.RightSliceRune)
 }
 
 // Generates SQL for an AliasedExpression (e.g. I("a").As("b") -> "a" AS "b")
@@ -534,8 +541,9 @@ func (esg *expressionSQLGenerator) updateExpressionSQL(b sb.SQLBuilder, update e
 }
 
 // Generates SQL for a LiteralExpression
-//    L("a + b") -> a + b
-//    L("a = ?", 1) -> a = 1
+//
+//	L("a + b") -> a + b
+//	L("a = ?", 1) -> a = 1
 func (esg *expressionSQLGenerator) literalExpressionSQL(b sb.SQLBuilder, literal exp.LiteralExpression) {
 	l := literal.Literal()
 	args := literal.Args()
@@ -555,7 +563,8 @@ func (esg *expressionSQLGenerator) literalExpressionSQL(b sb.SQLBuilder, literal
 }
 
 // Generates SQL for a SQLFunctionExpression
-//   COUNT(I("a")) -> COUNT("a")
+//
+//	COUNT(I("a")) -> COUNT("a")
 func (esg *expressionSQLGenerator) sqlFunctionExpressionSQL(b sb.SQLBuilder, sqlFunc exp.SQLFunctionExpression) {
 	b.WriteStrings(sqlFunc.Name())
 	esg.Generate(b, sqlFunc.Args())
@@ -619,7 +628,8 @@ func (esg *expressionSQLGenerator) windowExpressionSQL(b sb.SQLBuilder, we exp.W
 }
 
 // Generates SQL for a CastExpression
-//   I("a").Cast("NUMERIC") -> CAST("a" AS NUMERIC)
+//
+//	I("a").Cast("NUMERIC") -> CAST("a" AS NUMERIC)
 func (esg *expressionSQLGenerator) castExpressionSQL(b sb.SQLBuilder, cast exp.CastExpression) {
 	b.Write(esg.dialectOptions.CastFragment).WriteRunes(esg.dialectOptions.LeftParenRune)
 	esg.Generate(b, cast.Casted())

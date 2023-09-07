@@ -187,6 +187,10 @@ type (
 		LeftParenRune rune
 		// Right paren rune (DEFAULT=')')
 		RightParenRune rune
+		// Left slice rune (DEFAULT='{')
+		LeftSliceRune rune
+		// Right slice rune (DEFAULT='}')
+		RightSliceRune rune
 		// Star rune (DEFAULT='*')
 		StarRune rune
 		// Period rune (DEFAULT='.')
@@ -498,6 +502,8 @@ func DefaultDialectOptions() *SQLDialectOptions {
 		SpaceRune:           ' ',
 		LeftParenRune:       '(',
 		RightParenRune:      ')',
+		LeftSliceRune:       '(',
+		RightSliceRune:      ')',
 		StarRune:            '*',
 		PeriodRune:          '.',
 		EmptyString:         "",

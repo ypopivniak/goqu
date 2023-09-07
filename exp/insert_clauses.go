@@ -32,10 +32,10 @@ type (
 		Alias() IdentifierExpression
 		SetAlias(ie IdentifierExpression) InsertClauses
 
-		Vals() [][]interface{}
+		Vals() []Vals
 		HasVals() bool
-		SetVals(vals [][]interface{}) InsertClauses
-		ValsAppend(vals [][]interface{}) InsertClauses
+		SetVals(vals []Vals) InsertClauses
+		ValsAppend(vals []Vals) InsertClauses
 
 		OnConflict() ConflictExpression
 		SetOnConflict(expression ConflictExpression) InsertClauses
@@ -47,7 +47,7 @@ type (
 		returning    ColumnListExpression
 		alias        IdentifierExpression
 		rows         []interface{}
-		values       [][]interface{}
+		values       []Vals
 		from         AppendableExpression
 		conflict     ConflictExpression
 	}
@@ -171,7 +171,7 @@ func (ic *insertClauses) SetRows(rows []interface{}) InsertClauses {
 	return ret
 }
 
-func (ic *insertClauses) Vals() [][]interface{} {
+func (ic *insertClauses) Vals() []Vals {
 	return ic.values
 }
 
@@ -179,15 +179,15 @@ func (ic *insertClauses) HasVals() bool {
 	return ic.values != nil && len(ic.values) > 0
 }
 
-func (ic *insertClauses) SetVals(vals [][]interface{}) InsertClauses {
+func (ic *insertClauses) SetVals(vals []Vals) InsertClauses {
 	ret := ic.clone()
 	ret.values = vals
 	return ret
 }
 
-func (ic *insertClauses) ValsAppend(vals [][]interface{}) InsertClauses {
+func (ic *insertClauses) ValsAppend(vals []Vals) InsertClauses {
 	ret := ic.clone()
-	newVals := make([][]interface{}, 0, len(ic.values)+len(vals))
+	newVals := make([]Vals, 0, len(ic.values)+len(vals))
 	newVals = append(newVals, ic.values...)
 	newVals = append(newVals, vals...)
 	ret.values = newVals

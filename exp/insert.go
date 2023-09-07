@@ -12,7 +12,7 @@ type (
 	insert struct {
 		from AppendableExpression
 		cols ColumnListExpression
-		vals [][]interface{}
+		vals []Vals
 	}
 )
 
@@ -70,11 +70,11 @@ func (i *insert) SetCols(cols ColumnListExpression) InsertExpression {
 	return ci
 }
 
-func (i *insert) Vals() [][]interface{} {
+func (i *insert) Vals() []Vals {
 	return i.vals
 }
 
-func (i *insert) SetVals(vals [][]interface{}) InsertExpression {
+func (i *insert) SetVals(vals []Vals) InsertExpression {
 	ci := i.clone()
 	ci.vals = vals
 	return ci
@@ -89,7 +89,7 @@ func newInsert(rows ...interface{}) (insertExp InsertExpression, err error) {
 	if rowKind == reflect.Struct {
 		return createStructSliceInsert(rows...)
 	}
-	vals := make([][]interface{}, 0, len(rows))
+	vals := make([]Vals, 0, len(rows))
 	var columns ColumnListExpression
 	for _, row := range rows {
 		if rowType != reflect.Indirect(reflect.ValueOf(row)).Type() {

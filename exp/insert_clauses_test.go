@@ -98,7 +98,7 @@ func (ics *insertClausesSuite) TestColsAppend() {
 
 func (ics *insertClausesSuite) TestVals() {
 	c := exp.NewInsertClauses()
-	vals := [][]interface{}{{"a", "b"}}
+	vals := []exp.Vals{{"a", "b"}}
 	c2 := c.SetVals(vals)
 
 	ics.Nil(c.Vals())
@@ -108,7 +108,7 @@ func (ics *insertClausesSuite) TestVals() {
 
 func (ics *insertClausesSuite) TestHasVals() {
 	c := exp.NewInsertClauses()
-	vals := [][]interface{}{{"a", "b"}}
+	vals := []exp.Vals{{"a", "b"}}
 	c2 := c.SetVals(vals)
 
 	ics.False(c.HasVals())
@@ -117,14 +117,14 @@ func (ics *insertClausesSuite) TestHasVals() {
 }
 
 func (ics *insertClausesSuite) TestValsAppend() {
-	vals := [][]interface{}{{"a", "b"}}
-	vals2 := [][]interface{}{{"c", "d"}}
+	vals := []exp.Vals{{"a", "b"}}
+	vals2 := []exp.Vals{{"c", "d"}}
 	c := exp.NewInsertClauses().SetVals(vals)
 	c2 := c.ValsAppend(vals2)
 
 	ics.Equal(vals, c.Vals())
 
-	ics.Equal([][]interface{}{
+	ics.Equal([]exp.Vals{
 		{"a", "b"},
 		{"c", "d"},
 	}, c2.Vals())

@@ -137,7 +137,7 @@ func (isg *insertSQLGenerator) insertColumnsSQL(b sb.SQLBuilder, cols exp.Column
 }
 
 // Adds the values clause to an SQL statement
-func (isg *insertSQLGenerator) insertValuesSQL(b sb.SQLBuilder, values [][]interface{}) {
+func (isg *insertSQLGenerator) insertValuesSQL(b sb.SQLBuilder, values []exp.Vals) {
 	b.Write(isg.DialectOptions().ValuesFragment)
 	rowLen := len(values[0])
 	valueLen := len(values)
@@ -146,7 +146,9 @@ func (isg *insertSQLGenerator) insertValuesSQL(b sb.SQLBuilder, values [][]inter
 			b.SetError(errMisMatchedRowLength(rowLen, len(row)))
 			return
 		}
+		b.WriteRunes(isg.DialectOptions().LeftParenRune)
 		isg.ExpressionSQLGenerator().Generate(b, row)
+		b.WriteRunes(isg.DialectOptions().RightParenRune)
 		if i < valueLen-1 {
 			b.WriteRunes(isg.DialectOptions().CommaRune, isg.DialectOptions().SpaceRune)
 		}

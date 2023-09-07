@@ -353,8 +353,8 @@ type (
 		From() AppendableExpression
 		Cols() ColumnListExpression
 		SetCols(cols ColumnListExpression) InsertExpression
-		Vals() [][]interface{}
-		SetVals([][]interface{}) InsertExpression
+		Vals() []Vals
+		SetVals([]Vals) InsertExpression
 	}
 
 	JoinType       int

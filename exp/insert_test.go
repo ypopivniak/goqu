@@ -75,7 +75,7 @@ func (iets *insertExpressionTestSuite) TestNewInsertExpression_withNoValues() {
 func (iets *insertExpressionTestSuite) TestNewInsertExpression_Vals() {
 	ie, err := exp.NewInsertExpression()
 	iets.NoError(err)
-	vals := [][]interface{}{
+	vals := []exp.Vals{
 		{"a", "b"},
 	}
 	ie = ie.SetCols(exp.NewColumnListExpression("a", "b")).SetVals(vals)
@@ -87,7 +87,7 @@ func (iets *insertExpressionTestSuite) TestNewInsertExpression_Vals() {
 func (iets *insertExpressionTestSuite) TestNewInsertExpression_Cols() {
 	ie, err := exp.NewInsertExpression()
 	iets.NoError(err)
-	vals := [][]interface{}{
+	vals := []exp.Vals{
 		{"a", "b"},
 	}
 	ce := exp.NewColumnListExpression("a", "b")
@@ -120,7 +120,7 @@ func (iets *insertExpressionTestSuite) TestNewInsertExpression_withRecords() {
 	ie, err := exp.NewInsertExpression(exp.Record{"c": "a"}, exp.Record{"c": "b"})
 	iets.NoError(err)
 	iets.Equal(exp.NewColumnListExpression("c"), ie.Cols())
-	iets.Equal([][]interface{}{{"a"}, {"b"}}, ie.Vals())
+	iets.Equal([]exp.Vals{{"a"}, {"b"}}, ie.Vals())
 	iets.False(ie.IsEmpty())
 	iets.False(ie.IsInsertFrom())
 }
@@ -129,7 +129,7 @@ func (iets *insertExpressionTestSuite) TestNewInsertExpression_withRecordsSlice(
 	ie, err := exp.NewInsertExpression([]exp.Record{{"c": "a"}, {"c": "b"}})
 	iets.NoError(err)
 	iets.Equal(exp.NewColumnListExpression("c"), ie.Cols())
-	iets.Equal([][]interface{}{{"a"}, {"b"}}, ie.Vals())
+	iets.Equal([]exp.Vals{{"a"}, {"b"}}, ie.Vals())
 	iets.False(ie.IsEmpty())
 	iets.False(ie.IsInsertFrom())
 }
@@ -151,7 +151,7 @@ func (iets *insertExpressionTestSuite) TestNewInsertExpression_withMap() {
 	)
 	iets.NoError(err)
 	iets.Equal(exp.NewColumnListExpression("c"), ie.Cols())
-	iets.Equal([][]interface{}{{"a"}, {"b"}}, ie.Vals())
+	iets.Equal([]exp.Vals{{"a"}, {"b"}}, ie.Vals())
 	iets.False(ie.IsEmpty())
 	iets.False(ie.IsInsertFrom())
 }
@@ -166,7 +166,7 @@ func (iets *insertExpressionTestSuite) TestNewInsertExpression_withStructs() {
 	)
 	iets.NoError(err)
 	iets.Equal(exp.NewColumnListExpression("c"), ie.Cols())
-	iets.Equal([][]interface{}{{"a"}, {"b"}}, ie.Vals())
+	iets.Equal([]exp.Vals{{"a"}, {"b"}}, ie.Vals())
 	iets.False(ie.IsEmpty())
 	iets.False(ie.IsInsertFrom())
 }
@@ -181,7 +181,7 @@ func (iets *insertExpressionTestSuite) TestNewInsertExpression_withStructSlice()
 	})
 	iets.NoError(err)
 	iets.Equal(exp.NewColumnListExpression("c"), ie.Cols())
-	iets.Equal([][]interface{}{{"a"}, {"b"}}, ie.Vals())
+	iets.Equal([]exp.Vals{{"a"}, {"b"}}, ie.Vals())
 	iets.False(ie.IsEmpty())
 	iets.False(ie.IsInsertFrom())
 }
@@ -198,7 +198,7 @@ func (iets *insertExpressionTestSuite) TestNewInsertExpression_withStructsWithou
 	)
 	iets.NoError(err)
 	iets.Equal(exp.NewColumnListExpression("fielda", "fieldb", "fieldc"), ie.Cols())
-	iets.Equal([][]interface{}{{int64(1), true, "a"}, {int64(2), false, "b"}}, ie.Vals())
+	iets.Equal([]exp.Vals{{int64(1), true, "a"}, {int64(2), false, "b"}}, ie.Vals())
 	iets.False(ie.IsEmpty())
 	iets.False(ie.IsInsertFrom())
 }
@@ -215,7 +215,7 @@ func (iets *insertExpressionTestSuite) TestNewInsertExpression_withStructsIgnore
 	)
 	iets.NoError(err)
 	iets.Equal(exp.NewColumnListExpression("fieldb", "fieldc"), ie.Cols())
-	iets.Equal([][]interface{}{{true, "a"}, {false, "b"}}, ie.Vals())
+	iets.Equal([]exp.Vals{{true, "a"}, {false, "b"}}, ie.Vals())
 	iets.False(ie.IsEmpty())
 	iets.False(ie.IsInsertFrom())
 }
@@ -232,7 +232,7 @@ func (iets *insertExpressionTestSuite) TestNewInsertExpression_withStructsWithGo
 	)
 	iets.NoError(err)
 	iets.Equal(exp.NewColumnListExpression("fielda", "fieldb"), ie.Cols())
-	iets.Equal([][]interface{}{{int64(1), true}, {int64(2), false}}, ie.Vals())
+	iets.Equal([]exp.Vals{{int64(1), true}, {int64(2), false}}, ie.Vals())
 	iets.False(ie.IsEmpty())
 	iets.False(ie.IsInsertFrom())
 }
@@ -247,7 +247,7 @@ func (iets *insertExpressionTestSuite) TestNewInsertExpression_withStructPointer
 	)
 	iets.NoError(err)
 	iets.Equal(exp.NewColumnListExpression("c"), ie.Cols())
-	iets.Equal([][]interface{}{{"a"}, {"b"}}, ie.Vals())
+	iets.Equal([]exp.Vals{{"a"}, {"b"}}, ie.Vals())
 	iets.False(ie.IsEmpty())
 	iets.False(ie.IsInsertFrom())
 }
@@ -270,7 +270,7 @@ func (iets *insertExpressionTestSuite) TestNewInsertExpression_withStructsWithEm
 	)
 	iets.NoError(err)
 	iets.Equal(exp.NewColumnListExpression("address", "home_phone", "name", "primary_phone"), ie.Cols())
-	iets.Equal([][]interface{}{
+	iets.Equal([]exp.Vals{
 		{"111 Test Addr", "123123", "Test1", "456456"},
 		{"211 Test Addr", "123123", "Test2", "456456"},
 		{"311 Test Addr", "123123", "Test3", "456456"},
@@ -298,7 +298,7 @@ func (iets *insertExpressionTestSuite) TestNewInsertExpression_withStructsWithEm
 	)
 	iets.NoError(err)
 	iets.Equal(exp.NewColumnListExpression("address", "home_phone", "name", "primary_phone"), ie.Cols())
-	iets.Equal([][]interface{}{
+	iets.Equal([]exp.Vals{
 		{"111 Test Addr", "123123", "Test1", "456456"},
 		{"211 Test Addr", "123123", "Test2", "456456"},
 		{"311 Test Addr", "123123", "Test3", "456456"},
@@ -326,7 +326,7 @@ func (iets *insertExpressionTestSuite) TestNewInsertExpression_withNilEmbeddedSt
 	)
 	iets.NoError(err)
 	iets.Equal(exp.NewColumnListExpression("address", "name"), ie.Cols())
-	iets.Equal([][]interface{}{
+	iets.Equal([]exp.Vals{
 		{"111 Test Addr", "Test1"},
 		{"211 Test Addr", "Test2"},
 		{"311 Test Addr", "Test3"},
