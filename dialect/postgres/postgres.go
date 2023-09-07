@@ -7,9 +7,8 @@ import (
 func DialectOptions() *goqu.SQLDialectOptions {
 	do := goqu.DefaultDialectOptions()
 	do.PlaceHolderFragment = []byte("$")
-	do.LeftSliceFragment = []byte("ARRAY[")
-	do.RightSliceFragment = []byte("]")
-	do.EmptySliceFragment = []byte("'{}'") // This is special case for Postgres to omit explicit type of array
+	do.LeftSliceFragment = []byte("'{")
+	do.RightSliceFragment = []byte("}'")
 	do.IncludePlaceholderNum = true
 	return do
 }
