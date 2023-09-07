@@ -124,7 +124,7 @@ func (esg *expressionSQLGenerator) Generate(b sb.SQLBuilder, val interface{}) {
 		esg.Generate(b, dVal)
 	case exp.Vals:
 		for i, l := 0, len(v); i < l; i++ {
-			esg.Generate(b, v)
+			esg.Generate(b, v[i])
 			if i < l-1 {
 				b.WriteRunes(esg.dialectOptions.CommaRune, esg.dialectOptions.SpaceRune)
 			}
