@@ -20,9 +20,7 @@ type (
 		Dialect() string
 		Generate(b sb.SQLBuilder, val interface{})
 	}
-	sliceValue struct {
-		val interface{}
-	}
+	sliceValue interface{}
 	// The default adapter. This class should be used when building a new adapter. When creating a new adapter you can
 	// either override methods, or more typically update default values.
 	// See (github.com/doug-martin/goqu/dialect/postgres)
@@ -88,10 +86,7 @@ func (esg *expressionSQLGenerator) Generate(b sb.SQLBuilder, val interface{}) {
 		esg.literalNil(b)
 		return
 	}
-	if sv, ok := val.(sliceValue); ok {
-		slice = true
-		val = sv.val
-	}
+	_, slice = val.(sliceValue)
 
 	switch v := val.(type) {
 	case exp.Expression:
@@ -140,9 +135,6 @@ func (esg *expressionSQLGenerator) Generate(b sb.SQLBuilder, val interface{}) {
 			}
 		}
 	default:
-		if slice {
-			val = sliceValue{val}
-		}
 		esg.reflectSQL(b, val)
 	}
 }
@@ -403,7 +395,7 @@ func (esg *expressionSQLGenerator) sliceValueSQL(b sb.SQLBuilder, slice reflect.
 
 	b.Write(esg.dialectOptions.LeftSliceFragment)
 	for i, l := 0, slice.Len(); i < l; i++ {
-		esg.Generate(b, sliceValue{slice.Index(i).Interface()})
+		esg.Generate(b, sliceValue(slice.Index(i).Interface()))
 		if i < l-1 {
 			b.WriteRunes(esg.dialectOptions.CommaRune, esg.dialectOptions.SpaceRune)
 		}
