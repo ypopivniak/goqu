@@ -20,7 +20,7 @@ type (
 		Dialect() string
 		Generate(b sb.SQLBuilder, val interface{})
 	}
-	sliceValue interface{}
+
 	// The default adapter. This class should be used when building a new adapter. When creating a new adapter you can
 	// either override methods, or more typically update default values.
 	// See (github.com/doug-martin/goqu/dialect/postgres)
@@ -77,8 +77,10 @@ func (esg *expressionSQLGenerator) Dialect() string {
 var valuerReflectType = reflect.TypeOf((*driver.Valuer)(nil)).Elem()
 
 func (esg *expressionSQLGenerator) Generate(b sb.SQLBuilder, val interface{}) {
-	var slice bool
+	esg.generate(b, val, false)
+}
 
+func (esg *expressionSQLGenerator) generate(b sb.SQLBuilder, val interface{}, sliceValue bool) {
 	if b.Error() != nil {
 		return
 	}
@@ -86,7 +88,6 @@ func (esg *expressionSQLGenerator) Generate(b sb.SQLBuilder, val interface{}) {
 		esg.literalNil(b)
 		return
 	}
-	_, slice = val.(sliceValue)
 
 	switch v := val.(type) {
 	case exp.Expression:
@@ -102,7 +103,7 @@ func (esg *expressionSQLGenerator) Generate(b sb.SQLBuilder, val interface{}) {
 	case float64:
 		esg.literalFloat(b, v)
 	case string:
-		esg.literalString(b, v, slice)
+		esg.literalString(b, v, sliceValue)
 	case bool:
 		esg.literalBool(b, v)
 	case time.Time:
@@ -126,20 +127,20 @@ func (esg *expressionSQLGenerator) Generate(b sb.SQLBuilder, val interface{}) {
 			b.SetError(err)
 			return
 		}
-		esg.Generate(b, dVal)
+		esg.generate(b, dVal, false)
 	case exp.Vals:
 		for i, l := 0, len(v); i < l; i++ {
-			esg.Generate(b, v[i])
+			esg.generate(b, v[i], false)
 			if i < l-1 {
 				b.WriteRunes(esg.dialectOptions.CommaRune, esg.dialectOptions.SpaceRune)
 			}
 		}
 	default:
-		esg.reflectSQL(b, val)
+		esg.reflectSQL(b, val, sliceValue)
 	}
 }
 
-func (esg *expressionSQLGenerator) reflectSQL(b sb.SQLBuilder, val interface{}) {
+func (esg *expressionSQLGenerator) reflectSQL(b sb.SQLBuilder, val interface{}, sliceValue bool) {
 	v := reflect.Indirect(reflect.ValueOf(val))
 	valKind := v.Kind()
 	switch {
@@ -155,15 +156,15 @@ func (esg *expressionSQLGenerator) reflectSQL(b sb.SQLBuilder, val interface{}) 
 			esg.sliceValueSQL(b, v)
 		}
 	case util.IsInt(valKind):
-		esg.Generate(b, v.Int())
+		esg.generate(b, v.Int(), sliceValue)
 	case util.IsUint(valKind):
-		esg.Generate(b, int64(v.Uint()))
+		esg.generate(b, int64(v.Uint()), sliceValue)
 	case util.IsFloat(valKind):
-		esg.Generate(b, v.Float())
+		esg.generate(b, v.Float(), sliceValue)
 	case util.IsString(valKind):
-		esg.Generate(b, v.String())
+		esg.generate(b, v.String(), sliceValue)
 	case util.IsBool(valKind):
-		esg.Generate(b, v.Bool())
+		esg.generate(b, v.Bool(), sliceValue)
 	default:
 		b.SetError(errors.NewEncodeError(val))
 	}
@@ -395,7 +396,7 @@ func (esg *expressionSQLGenerator) sliceValueSQL(b sb.SQLBuilder, slice reflect.
 
 	b.Write(esg.dialectOptions.LeftSliceFragment)
 	for i, l := 0, slice.Len(); i < l; i++ {
-		esg.Generate(b, sliceValue(slice.Index(i).Interface()))
+		esg.generate(b, slice.Index(i).Interface(), true)
 		if i < l-1 {
 			b.WriteRunes(esg.dialectOptions.CommaRune, esg.dialectOptions.SpaceRune)
 		}
