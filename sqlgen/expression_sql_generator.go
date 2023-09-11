@@ -20,7 +20,9 @@ type (
 		Dialect() string
 		Generate(b sb.SQLBuilder, val interface{})
 	}
-	SliceString string
+	sliceValue struct {
+		val interface{}
+	}
 	// The default adapter. This class should be used when building a new adapter. When creating a new adapter you can
 	// either override methods, or more typically update default values.
 	// See (github.com/doug-martin/goqu/dialect/postgres)
@@ -77,6 +79,8 @@ func (esg *expressionSQLGenerator) Dialect() string {
 var valuerReflectType = reflect.TypeOf((*driver.Valuer)(nil)).Elem()
 
 func (esg *expressionSQLGenerator) Generate(b sb.SQLBuilder, val interface{}) {
+	var slice bool
+
 	if b.Error() != nil {
 		return
 	}
@@ -84,6 +88,11 @@ func (esg *expressionSQLGenerator) Generate(b sb.SQLBuilder, val interface{}) {
 		esg.literalNil(b)
 		return
 	}
+	if sv, ok := val.(sliceValue); ok {
+		slice = true
+		val = sv.val
+	}
+
 	switch v := val.(type) {
 	case exp.Expression:
 		esg.expressionSQL(b, v)
@@ -98,7 +107,7 @@ func (esg *expressionSQLGenerator) Generate(b sb.SQLBuilder, val interface{}) {
 	case float64:
 		esg.literalFloat(b, v)
 	case string:
-		esg.literalString(b, v)
+		esg.literalString(b, v, slice)
 	case bool:
 		esg.literalBool(b, v)
 	case time.Time:
@@ -335,12 +344,19 @@ func (esg *expressionSQLGenerator) literalInt(b sb.SQLBuilder, i int64) {
 }
 
 // Generates SQL for a string
-func (esg *expressionSQLGenerator) literalString(b sb.SQLBuilder, s string) {
-	if b.IsPrepared() {
+func (esg *expressionSQLGenerator) literalString(b sb.SQLBuilder, s string, slice bool) {
+	if b.IsPrepared() && !esg.dialectOptions.SinglePlaceholderForSlice {
 		esg.placeHolderSQL(b, s)
 		return
 	}
-	b.WriteRunes(esg.dialectOptions.StringQuote)
+
+	quote := esg.dialectOptions.StringQuote
+	if slice {
+		quote = esg.dialectOptions.StringSliceQuote
+	}
+
+	b.WriteRunes(quote)
+
 	for _, char := range s {
 		if e, ok := esg.dialectOptions.EscapedRunes[char]; ok {
 			b.Write(e)
@@ -349,7 +365,7 @@ func (esg *expressionSQLGenerator) literalString(b sb.SQLBuilder, s string) {
 		}
 	}
 
-	b.WriteRunes(esg.dialectOptions.StringQuote)
+	b.WriteRunes(quote)
 }
 
 // Generates SQL for a slice of bytes
@@ -375,9 +391,14 @@ func (esg *expressionSQLGenerator) literalBytes(b sb.SQLBuilder, bs []byte) {
 
 // Generates SQL for a slice of values (e.g. []int64{1,2,3,4} -> (1,2,3,4)/{1,2,3,4}
 func (esg *expressionSQLGenerator) sliceValueSQL(b sb.SQLBuilder, slice reflect.Value) {
+	if b.IsPrepared() && esg.dialectOptions.SinglePlaceholderForSlice {
+		esg.placeHolderSQL(b, slice.Interface())
+		return
+	}
+
 	b.Write(esg.dialectOptions.LeftSliceFragment)
 	for i, l := 0, slice.Len(); i < l; i++ {
-		esg.Generate(b, slice.Index(i).Interface())
+		esg.Generate(b, sliceValue{slice.Index(i).Interface()})
 		if i < l-1 {
 			b.WriteRunes(esg.dialectOptions.CommaRune, esg.dialectOptions.SpaceRune)
 		}

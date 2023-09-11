@@ -9,6 +9,8 @@ func DialectOptions() *goqu.SQLDialectOptions {
 	do.PlaceHolderFragment = []byte("$")
 	do.LeftSliceFragment = []byte("'{")
 	do.RightSliceFragment = []byte("}'")
+	do.StringSliceQuote = '"'
+	do.SinglePlaceholderForSlice = true
 	do.IncludePlaceholderNum = true
 	return do
 }

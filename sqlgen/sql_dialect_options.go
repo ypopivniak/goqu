@@ -173,6 +173,8 @@ type (
 		EndFragment []byte
 		// The quote rune to use when quoting string literals (DEFAULT='\'')
 		StringQuote rune
+		// The quote rune to use when quoting string literals in slice context (DEFAULT='\'')
+		StringSliceQuote rune
 		// The operator to use when setting values in an update statement (DEFAULT='=')
 		SetOperatorRune rune
 		// The placeholder fragment to use when generating a non interpolated statement (DEFAULT=[]byte"?")
@@ -197,6 +199,8 @@ type (
 		PeriodRune rune
 		// Set to true to include positional argument numbers when creating a prepared statement (Default=false)
 		IncludePlaceholderNum bool
+		// Set to true if single placeholder required for slice type (DEFAULT=false)
+		SinglePlaceholderForSlice bool
 		// The time format to use when serializing time.Time (DEFAULT=time.RFC3339Nano)
 		TimeFormat string
 		// A map used to look up BooleanOperations and their SQL equivalents
@@ -497,6 +501,7 @@ func DefaultDialectOptions() *SQLDialectOptions {
 		PlaceHolderFragment: []byte("?"),
 		QuoteRune:           '"',
 		StringQuote:         '\'',
+		StringSliceQuote:    '\'',
 		SetOperatorRune:     '=',
 		CommaRune:           ',',
 		SpaceRune:           ' ',

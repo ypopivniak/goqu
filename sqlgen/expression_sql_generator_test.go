@@ -332,6 +332,27 @@ func (esgs *expressionSQLGeneratorSuite) TestGenerate_Slice() {
 	)
 }
 
+func (esgs *expressionSQLGeneratorSuite) TestGenerate_SliceSinglePlaceholder() {
+	type custom []string
+	opts := sqlgen.DefaultDialectOptions()
+	opts.StringSliceQuote = '"'
+	opts.IncludePlaceholderNum = true
+	opts.SinglePlaceholderForSlice = true
+	opts.PlaceHolderFragment = []byte("$")
+	opts.LeftSliceFragment = []byte("'{")
+	opts.RightSliceFragment = []byte("}'")
+	esgs.assertCases(
+		sqlgen.NewExpressionSQLGenerator("test", opts),
+		expressionTestCase{val: []string{"a", "b", "c"}, sql: `'{"a", "b", "c"}'`},
+		expressionTestCase{
+			val: []string{"a", "b", "c"}, sql: "$1", isPrepared: true, args: []interface{}{[]string{"a", "b", "c"}},
+		},
+		expressionTestCase{
+			val: custom{"a", "b", "c"}, sql: "$1", isPrepared: true, args: []interface{}{custom{"a", "b", "c"}},
+		},
+	)
+}
+
 type unknownExpression struct{}
 
 func (ue unknownExpression) Expression() exp.Expression {
