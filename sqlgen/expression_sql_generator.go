@@ -140,6 +140,9 @@ func (esg *expressionSQLGenerator) Generate(b sb.SQLBuilder, val interface{}) {
 			}
 		}
 	default:
+		if slice {
+			val = sliceValue{val}
+		}
 		esg.reflectSQL(b, val)
 	}
 }
