@@ -346,7 +346,7 @@ func (esg *expressionSQLGenerator) literalInt(b sb.SQLBuilder, i int64) {
 // Generates SQL for a string
 func (esg *expressionSQLGenerator) literalString(b sb.SQLBuilder, s string, slice bool) {
 	if b.IsPrepared() {
-		if !esg.dialectOptions.SinglePlaceholderForSlice {
+		if !slice || (slice && !esg.dialectOptions.SinglePlaceholderForSlice) {
 			esg.placeHolderSQL(b, s)
 		}
 		return
