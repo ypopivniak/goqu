@@ -152,6 +152,8 @@ func (esg *expressionSQLGenerator) reflectSQL(b sb.SQLBuilder, val interface{}, 
 			esg.literalBytes(b, t)
 		case []exp.CommonTableExpression:
 			esg.commonTablesSliceSQL(b, t)
+		case []exp.IdentifierExpression:
+			esg.sliceIdentifierSQL(b, v)
 		default:
 			esg.sliceValueSQL(b, v)
 		}
@@ -402,6 +404,17 @@ func (esg *expressionSQLGenerator) sliceValueSQL(b sb.SQLBuilder, slice reflect.
 		}
 	}
 	b.Write(esg.dialectOptions.RightSliceFragment)
+}
+
+func (esg *expressionSQLGenerator) sliceIdentifierSQL(b sb.SQLBuilder, slice reflect.Value) {
+	b.WriteRunes(esg.dialectOptions.LeftParenRune)
+	for i, l := 0, slice.Len(); i < l; i++ {
+		esg.Generate(b, slice.Index(i).Interface())
+		if i < l-1 {
+			b.WriteRunes(esg.dialectOptions.CommaRune, esg.dialectOptions.SpaceRune)
+		}
+	}
+	b.WriteRunes(esg.dialectOptions.RightParenRune)
 }
 
 // Generates SQL for an AliasedExpression (e.g. I("a").As("b") -> "a" AS "b")
