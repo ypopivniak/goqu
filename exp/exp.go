@@ -162,6 +162,7 @@ type (
 )
 
 type (
+	Args []interface{}
 	Vals []interface{}
 	// Parent of all expression types
 	Expression interface {
@@ -392,7 +393,7 @@ type (
 		// Returns the literal sql
 		Literal() string
 		// Arguments to be replaced within the sql
-		Args() []interface{}
+		Args() Args
 	}
 
 	NullSortType  int
@@ -446,7 +447,7 @@ type (
 		// The function name
 		Name() string
 		// Arguments to be passed to the function
-		Args() []interface{}
+		Args() Args
 	}
 
 	UpdateExpression interface {

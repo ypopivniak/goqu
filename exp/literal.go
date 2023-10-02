@@ -3,7 +3,7 @@ package exp
 type (
 	literal struct {
 		literal string
-		args    []interface{}
+		args    Args
 	}
 )
 
@@ -35,7 +35,7 @@ func (l literal) Literal() string {
 	return l.literal
 }
 
-func (l literal) Args() []interface{} {
+func (l literal) Args() Args {
 	return l.args
 }
 

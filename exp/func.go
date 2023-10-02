@@ -3,7 +3,7 @@ package exp
 type (
 	sqlFunctionExpression struct {
 		name string
-		args []interface{}
+		args Args
 	}
 )
 
@@ -18,7 +18,7 @@ func (sfe sqlFunctionExpression) Clone() Expression {
 
 func (sfe sqlFunctionExpression) Expression() Expression { return sfe }
 
-func (sfe sqlFunctionExpression) Args() []interface{} { return sfe.args }
+func (sfe sqlFunctionExpression) Args() Args { return sfe.args }
 
 func (sfe sqlFunctionExpression) Name() string { return sfe.name }
 

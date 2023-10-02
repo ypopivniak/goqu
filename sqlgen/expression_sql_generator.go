@@ -152,7 +152,7 @@ func (esg *expressionSQLGenerator) reflectSQL(b sb.SQLBuilder, val interface{}, 
 			esg.literalBytes(b, t)
 		case []exp.CommonTableExpression:
 			esg.commonTablesSliceSQL(b, t)
-		case []exp.IdentifierExpression:
+		case exp.Args:
 			esg.sliceIdentifierSQL(b, v)
 		default:
 			esg.sliceValueSQL(b, v)
