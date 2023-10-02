@@ -6,6 +6,7 @@ import (
 	"github.com/doug-martin/goqu/v9/internal/sb"
 )
 
+// TruncateDataset for creating and/or executing TRUNCATE SQL statements.
 type TruncateDataset struct {
 	dialect      SQLDialect
 	clauses      exp.TruncateClauses
@@ -14,7 +15,7 @@ type TruncateDataset struct {
 	err          error
 }
 
-// used internally by database to create a database with a specific adapter
+// used internally by database to create a database with a specific adapter.
 func newTruncateDataset(d string, queryFactory exec.QueryFactory) *TruncateDataset {
 	return &TruncateDataset{
 		clauses:      exp.NewTruncateClauses(),
@@ -23,18 +24,19 @@ func newTruncateDataset(d string, queryFactory exec.QueryFactory) *TruncateDatas
 	}
 }
 
+// Truncate creates TruncateDataset for a table.
 func Truncate(table ...interface{}) *TruncateDataset {
 	return newTruncateDataset("default", nil).Table(table...)
 }
 
-// Sets the adapter used to serialize values and create the SQL statement
+// WithDialect sets the adapter used to serialize values and create the SQL statement.
 func (td *TruncateDataset) WithDialect(dl string) *TruncateDataset {
 	ds := td.copy(td.GetClauses())
 	ds.dialect = GetDialect(dl)
 	return ds
 }
 
-// Set the parameter interpolation behavior. See examples
+// Prepared sets the parameter interpolation behavior.
 //
 // prepared: If true the dataset WILL NOT interpolate the parameters.
 func (td *TruncateDataset) Prepared(prepared bool) *TruncateDataset {
@@ -43,37 +45,39 @@ func (td *TruncateDataset) Prepared(prepared bool) *TruncateDataset {
 	return ret
 }
 
+// IsPrepared returns whether the TruncateDataset is prepared or not.
 func (td *TruncateDataset) IsPrepared() bool {
 	return td.isPrepared.Bool()
 }
 
-// Returns the current adapter on the dataset
+// Dialect returns the current adapter on the TruncateDataset.
 func (td *TruncateDataset) Dialect() SQLDialect {
 	return td.dialect
 }
 
-// Returns the current adapter on the dataset
+// SetDialect returns the current adapter on the TruncateDataset.
 func (td *TruncateDataset) SetDialect(dialect SQLDialect) *TruncateDataset {
 	cd := td.copy(td.GetClauses())
 	cd.dialect = dialect
 	return cd
 }
 
+// Expression returns TruncateDataset as exp.Expression.
 func (td *TruncateDataset) Expression() exp.Expression {
 	return td
 }
 
-// Clones the dataset
+// Clone clones the TruncateDataset.
 func (td *TruncateDataset) Clone() exp.Expression {
 	return td.copy(td.clauses)
 }
 
-// Returns the current clauses on the dataset.
+// GetClauses returns the current clauses on the TruncateDataset.
 func (td *TruncateDataset) GetClauses() exp.TruncateClauses {
 	return td.clauses
 }
 
-// used interally to copy the dataset
+// used internally to copy the dataset.
 func (td *TruncateDataset) copy(clauses exp.TruncateClauses) *TruncateDataset {
 	return &TruncateDataset{
 		dialect:      td.dialect,
@@ -84,58 +88,59 @@ func (td *TruncateDataset) copy(clauses exp.TruncateClauses) *TruncateDataset {
 	}
 }
 
-// Adds a FROM clause. This return a new dataset with the original sources replaced. See examples.
+// Table adds a FROM clause. This return a new TruncateDataset with the original sources replaced.
 // You can pass in the following.
-//   string: Will automatically be turned into an identifier
-//   IdentifierExpression
-//   LiteralExpression: (See Literal) Will use the literal SQL
+//
+// string: Will automatically be turned into an identifier
+// IdentifierExpression
+// LiteralExpression: (See Literal) Will use the literal SQL
 func (td *TruncateDataset) Table(table ...interface{}) *TruncateDataset {
 	return td.copy(td.clauses.SetTable(exp.NewColumnListExpression(table...)))
 }
 
-// Adds a CASCADE clause
+// Cascade adds a CASCADE clause.
 func (td *TruncateDataset) Cascade() *TruncateDataset {
 	opts := td.clauses.Options()
 	opts.Cascade = true
 	return td.copy(td.clauses.SetOptions(opts))
 }
 
-// Clears the CASCADE clause
+// NoCascade clears the CASCADE clause.
 func (td *TruncateDataset) NoCascade() *TruncateDataset {
 	opts := td.clauses.Options()
 	opts.Cascade = false
 	return td.copy(td.clauses.SetOptions(opts))
 }
 
-// Adds a RESTRICT clause
+// Restrict adds a RESTRICT clause.
 func (td *TruncateDataset) Restrict() *TruncateDataset {
 	opts := td.clauses.Options()
 	opts.Restrict = true
 	return td.copy(td.clauses.SetOptions(opts))
 }
 
-// Clears the RESTRICT clause
+// NoRestrict clears the RESTRICT clause.
 func (td *TruncateDataset) NoRestrict() *TruncateDataset {
 	opts := td.clauses.Options()
 	opts.Restrict = false
 	return td.copy(td.clauses.SetOptions(opts))
 }
 
-// Add a IDENTITY clause (e.g. RESTART)
+// Identity adds a IDENTITY clause (e.g. RESTART)
 func (td *TruncateDataset) Identity(identity string) *TruncateDataset {
 	opts := td.clauses.Options()
 	opts.Identity = identity
 	return td.copy(td.clauses.SetOptions(opts))
 }
 
-// Get any error that has been set or nil if no error has been set.
+// Error returns any error that has been set or nil if no error has been set.
 func (td *TruncateDataset) Error() error {
 	return td.err
 }
 
-// Set an error on the dataset if one has not already been set. This error will be returned by a future call to Error
-// or as part of ToSQL. This can be used by end users to record errors while building up queries without having to
-// track those separately.
+// SetError sets an error on the TruncateDataset if one has not already been set.
+// This error will be returned by a future call to Error or as part of ToSQL.
+// This can be used by end users to record errors while building up queries without having to track those separately.
 func (td *TruncateDataset) SetError(err error) *TruncateDataset {
 	if td.err == nil {
 		td.err = err
@@ -144,17 +149,27 @@ func (td *TruncateDataset) SetError(err error) *TruncateDataset {
 	return td
 }
 
-// Generates a TRUNCATE sql statement, if Prepared has been called with true then the parameters will not be interpolated.
-// See examples.
+// ToSQL generates a TRUNCATE sql statement,
+// if Prepared has been called with true then the parameters will not be interpolated.
 //
 // Errors:
-//  * There is an error generating the SQL
+//   - There is an error generating the SQL
 func (td *TruncateDataset) ToSQL() (sql string, params []interface{}, err error) {
 	return td.truncateSQLBuilder().ToSQL()
 }
 
-// Generates the TRUNCATE sql, and returns an Exec struct with the sql set to the TRUNCATE statement
-//    db.From("test").Truncate().Executor().Exec()
+// MustToSQL does the same as ToSQL, but panics instead of returning an error.
+func (td *TruncateDataset) MustToSQL() (sql string, params []interface{}) {
+	var err error
+	if sql, params, err = td.truncateSQLBuilder().ToSQL(); err != nil {
+		panic(err)
+	}
+	return
+}
+
+// Executor generates the TRUNCATE sql, and returns an Exec struct with the sql set to the TRUNCATE statement.
+//
+// db.From("test").Truncate().Executor().Exec()
 func (td *TruncateDataset) Executor() exec.QueryExecutor {
 	return td.queryFactory.FromSQLBuilder(td.truncateSQLBuilder())
 }

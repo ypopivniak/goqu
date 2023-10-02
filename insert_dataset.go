@@ -9,6 +9,7 @@ import (
 	"github.com/doug-martin/goqu/v9/internal/sb"
 )
 
+// InsertDataset for creating and/or executing INSERT SQL statements.
 type InsertDataset struct {
 	dialect      SQLDialect
 	clauses      exp.InsertClauses
@@ -19,7 +20,7 @@ type InsertDataset struct {
 
 var ErrUnsupportedIntoType = errors.New("unsupported table type, a string or identifier expression is required")
 
-// used internally by database to create a database with a specific adapter
+// used internally by database to create a database with a specific adapter.
 func newInsertDataset(d string, queryFactory exec.QueryFactory) *InsertDataset {
 	return &InsertDataset{
 		clauses:      exp.NewInsertClauses(),
@@ -28,59 +29,61 @@ func newInsertDataset(d string, queryFactory exec.QueryFactory) *InsertDataset {
 	}
 }
 
-// Creates a new InsertDataset for the provided table. Using this method will only allow you
-// to create SQL user Database#From to create an InsertDataset with query capabilities
+// Insert creates a new InsertDataset for the provided table. Using this method will only allow you
+// to create SQL user Database#From to create an InsertDataset with query capabilities.
 func Insert(table interface{}) *InsertDataset {
 	return newInsertDataset("default", nil).Into(table)
 }
 
-// Set the parameter interpolation behavior. See examples
+// Prepared sets the parameter interpolation behavior.
 //
-// prepared: If true the dataset WILL NOT interpolate the parameters.
+// prepared: If true the InsertDataset WILL NOT interpolate the parameters.
 func (id *InsertDataset) Prepared(prepared bool) *InsertDataset {
 	ret := id.copy(id.clauses)
 	ret.isPrepared = preparedFromBool(prepared)
 	return ret
 }
 
+// IsPrepared returns whether the InsertDataset is prepared or not.
 func (id *InsertDataset) IsPrepared() bool {
 	return id.isPrepared.Bool()
 }
 
-// Sets the adapter used to serialize values and create the SQL statement
+// WithDialect sets the adapter used to serialize values and create the SQL statement.
 func (id *InsertDataset) WithDialect(dl string) *InsertDataset {
 	ds := id.copy(id.GetClauses())
 	ds.dialect = GetDialect(dl)
 	return ds
 }
 
-// Returns the current adapter on the dataset
+// Dialect returns the current adapter on the dataset.
 func (id *InsertDataset) Dialect() SQLDialect {
 	return id.dialect
 }
 
-// Returns the current adapter on the dataset
+// SetDialect sets the current adapter on the dataset.
 func (id *InsertDataset) SetDialect(dialect SQLDialect) *InsertDataset {
 	cd := id.copy(id.GetClauses())
 	cd.dialect = dialect
 	return cd
 }
 
+// Expression returns InsertDataset as exp.Expression.
 func (id *InsertDataset) Expression() exp.Expression {
 	return id
 }
 
-// Clones the dataset
+// Clone clones the InsertDataset.
 func (id *InsertDataset) Clone() exp.Expression {
 	return id.copy(id.clauses)
 }
 
-// Returns the current clauses on the dataset.
+// GetClauses returns the current clauses on the InsertDataset.
 func (id *InsertDataset) GetClauses() exp.InsertClauses {
 	return id.clauses
 }
 
-// used interally to copy the dataset
+// used internally to copy the InsertDataset.
 func (id *InsertDataset) copy(clauses exp.InsertClauses) *InsertDataset {
 	return &InsertDataset{
 		dialect:      id.dialect,
@@ -91,7 +94,7 @@ func (id *InsertDataset) copy(clauses exp.InsertClauses) *InsertDataset {
 	}
 }
 
-// Creates a WITH clause for a common table expression (CTE).
+// With creates a WITH clause for a common table expression (CTE).
 //
 // The name will be available to SELECT from in the associated query; and can optionally
 // contain a list of column names "name(col1, col2, col3)".
@@ -101,7 +104,7 @@ func (id *InsertDataset) With(name string, subquery exp.Expression) *InsertDatas
 	return id.copy(id.clauses.CommonTablesAppend(exp.NewCommonTableExpression(false, name, subquery)))
 }
 
-// Creates a WITH RECURSIVE clause for a common table expression (CTE)
+// WithRecursive creates a WITH RECURSIVE clause for a common table expression (CTE)
 //
 // The name will be available to SELECT from in the associated query; and must
 // contain a list of column names "name(col1, col2, col3)" for a recursive clause.
@@ -113,11 +116,11 @@ func (id *InsertDataset) WithRecursive(name string, subquery exp.Expression) *In
 	return id.copy(id.clauses.CommonTablesAppend(exp.NewCommonTableExpression(true, name, subquery)))
 }
 
-// Sets the table to insert INTO. This return a new dataset with the original table replaced. See examples.
+// Into sets the table to insert INTO. This return a new InsertDataset with the original table replaced.
 // You can pass in the following.
 //
-//	string: Will automatically be turned into an identifier
-//	Expression: Any valid expression (IdentifierExpression, AliasedExpression, Literal, etc.)
+// string: Will automatically be turned into an identifier
+// expression: any valid exp.Expression (exp.IdentifierExpression, exp.AliasedExpression, Literal, etc.)
 func (id *InsertDataset) Into(into interface{}) *InsertDataset {
 	switch t := into.(type) {
 	case exp.Expression:
@@ -129,22 +132,22 @@ func (id *InsertDataset) Into(into interface{}) *InsertDataset {
 	}
 }
 
-// Sets the Columns to insert into
+// Cols sets the Columns to insert into.
 func (id *InsertDataset) Cols(cols ...interface{}) *InsertDataset {
 	return id.copy(id.clauses.SetCols(exp.NewColumnListExpression(cols...)))
 }
 
-// Clears the Columns to insert into
+// ClearCols clears the Columns to insert into.
 func (id *InsertDataset) ClearCols() *InsertDataset {
 	return id.copy(id.clauses.SetCols(nil))
 }
 
-// Adds columns to the current list of columns clause. See examples
+// ColsAppend adds columns to the current list of columns clause.
 func (id *InsertDataset) ColsAppend(cols ...interface{}) *InsertDataset {
 	return id.copy(id.clauses.ColsAppend(exp.NewColumnListExpression(cols...)))
 }
 
-// Adds a subquery to the insert. See examples.
+// FromQuery adds a subquery to the insert.
 func (id *InsertDataset) FromQuery(from exp.AppendableExpression) *InsertDataset {
 	if sds, ok := from.(*SelectDataset); ok {
 		if sds.dialect != GetDialect("default") && id.Dialect() != sds.dialect {
@@ -160,49 +163,49 @@ func (id *InsertDataset) FromQuery(from exp.AppendableExpression) *InsertDataset
 	return id.copy(id.clauses.SetFrom(from))
 }
 
-// Manually set values to insert See examples.
+// Vals manually set values to insert.
 func (id *InsertDataset) Vals(vals ...Vals) *InsertDataset {
 	return id.copy(id.clauses.ValsAppend(vals))
 }
 
-// Clears the values. See examples.
+// ClearVals clears the values.
 func (id *InsertDataset) ClearVals() *InsertDataset {
 	return id.copy(id.clauses.SetVals(nil))
 }
 
-// Insert rows. Rows can be a map, goqu.Record or struct. See examples.
+// Rows insert rows. Rows can be a map, goqu.Record or struct.
 func (id *InsertDataset) Rows(rows ...interface{}) *InsertDataset {
 	return id.copy(id.clauses.SetRows(rows))
 }
 
-// Clears the rows for this insert dataset. See examples.
+// ClearRows clears the rows for this insert dataset.
 func (id *InsertDataset) ClearRows() *InsertDataset {
 	return id.copy(id.clauses.SetRows(nil))
 }
 
-// Adds a RETURNING clause to the dataset if the adapter supports it See examples.
+// Returning adds a RETURNING clause to the InsertDataset if the adapter supports it.
 func (id *InsertDataset) Returning(returning ...interface{}) *InsertDataset {
 	return id.copy(id.clauses.SetReturning(exp.NewColumnListExpression(returning...)))
 }
 
-// Adds an (ON CONFLICT/ON DUPLICATE KEY) clause to the dataset if the dialect supports it. See examples.
+// OnConflict adds an (ON CONFLICT/ON DUPLICATE KEY) clause to the InsertDataset if the dialect supports it.
 func (id *InsertDataset) OnConflict(conflict exp.ConflictExpression) *InsertDataset {
 	return id.copy(id.clauses.SetOnConflict(conflict))
 }
 
-// Clears the on conflict clause. See example
+// ClearOnConflict clears the on conflict clause.
 func (id *InsertDataset) ClearOnConflict() *InsertDataset {
 	return id.OnConflict(nil)
 }
 
-// Get any error that has been set or nil if no error has been set.
+// Error returns any error that has been set or nil if no error has been set.
 func (id *InsertDataset) Error() error {
 	return id.err
 }
 
-// Set an error on the dataset if one has not already been set. This error will be returned by a future call to Error
-// or as part of ToSQL. This can be used by end users to record errors while building up queries without having to
-// track those separately.
+// SetError set an error on the InsertDataset if one has not already been set.
+// This error will be returned by a future call to Error or as part of ToSQL.
+// This can be used by end users to record errors while building up queries without having to track those separately.
 func (id *InsertDataset) SetError(err error) *InsertDataset {
 	if id.err == nil {
 		id.err = err
@@ -211,8 +214,8 @@ func (id *InsertDataset) SetError(err error) *InsertDataset {
 	return id
 }
 
-// Generates the default INSERT statement. If Prepared has been called with true then the statement will not be
-// interpolated. See examples. When using structs you may specify a column to be skipped in the insert, (e.g. id) by
+// ToSQL generates the default INSERT statement. If Prepared has been called with true then the statement will not be
+// interpolated. When using structs you may specify a column to be skipped in the insert, (e.g. id) by
 // specifying a goqu tag with `skipinsert`
 //
 //	type Item struct{
@@ -233,8 +236,17 @@ func (id *InsertDataset) ToSQL() (sql string, params []interface{}, err error) {
 	return id.insertSQLBuilder().ToSQL()
 }
 
-// Appends this Dataset's INSERT statement to the SQLBuilder
-// This is used internally when using inserts in CTEs
+// MustToSQL does the same as ToSQL, but panics instead of returning an error.
+func (id *InsertDataset) MustToSQL() (sql string, params []interface{}) {
+	var err error
+	if sql, params, err = id.insertSQLBuilder().ToSQL(); err != nil {
+		panic(err)
+	}
+	return
+}
+
+// AppendSQL appends this InsertDataset's INSERT statement to the sb.SQLBuilder.
+// This is used internally when using inserts in CTEs.
 func (id *InsertDataset) AppendSQL(b sb.SQLBuilder) {
 	if id.err != nil {
 		b.SetError(id.err)
@@ -243,22 +255,25 @@ func (id *InsertDataset) AppendSQL(b sb.SQLBuilder) {
 	id.dialect.ToInsertSQL(b, id.GetClauses())
 }
 
+// GetAs returns the alias value as an identifier expression.
 func (id *InsertDataset) GetAs() exp.IdentifierExpression {
 	return id.clauses.Alias()
 }
 
-// Sets the alias for this dataset. This is typically used when using a Dataset as MySQL upsert
+// As sets the alias for this InsertDataset.
+// This is typically used when using a Dataset as MySQL upsert.
 func (id *InsertDataset) As(alias string) *InsertDataset {
 	return id.copy(id.clauses.SetAlias(T(alias)))
 }
 
+// ReturnsColumns returns whether the InsertDataset has returning columns or not.
 func (id *InsertDataset) ReturnsColumns() bool {
 	return id.clauses.HasReturning()
 }
 
-// Generates the INSERT sql, and returns an QueryExecutor struct with the sql set to the INSERT statement
+// Executor generates the INSERT sql, and returns an exec.QueryExecutor struct with the sql set to the INSERT statement.
 //
-//	db.Insert("test").Rows(Record{"name":"Bob"}).Executor().Exec()
+// db.Insert("test").Rows(Record{"name":"Bob"}).Executor().Exec()
 func (id *InsertDataset) Executor() exec.QueryExecutor {
 	return id.queryFactory.FromSQLBuilder(id.insertSQLBuilder())
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/doug-martin/goqu/v9/internal/sb"
 )
 
-// Dataset for creating and/or executing SELECT SQL statements.
+// SelectDataset for creating and/or executing SELECT SQL statements.
 type SelectDataset struct {
 	dialect      SQLDialect
 	clauses      exp.SelectClauses
@@ -23,7 +23,7 @@ var ErrQueryFactoryNotFoundError = errors.New(
 	"unable to execute query did you use goqu.Database#From to create the dataset",
 )
 
-// used internally by database to create a database with a specific adapter
+// used internally by database to create a database with a specific adapter.
 func newDataset(d string, queryFactory exec.QueryFactory) *SelectDataset {
 	return &SelectDataset{
 		clauses:      exp.NewSelectClauses(),
@@ -32,22 +32,24 @@ func newDataset(d string, queryFactory exec.QueryFactory) *SelectDataset {
 	}
 }
 
+// From creates SelectDataset for a table.
 func From(table ...interface{}) *SelectDataset {
 	return newDataset("default", nil).From(table...)
 }
 
+// Select creates SelectDataset for columns.
 func Select(cols ...interface{}) *SelectDataset {
 	return newDataset("default", nil).Select(cols...)
 }
 
-// Sets the adapter used to serialize values and create the SQL statement
+// WithDialect sets the adapter used to serialize values and create the SQL statement.
 func (sd *SelectDataset) WithDialect(dl string) *SelectDataset {
 	ds := sd.copy(sd.GetClauses())
 	ds.dialect = GetDialect(dl)
 	return ds
 }
 
-// Set the parameter interpolation behavior. See examples
+// Prepared sets the parameter interpolation behavior.
 //
 // prepared: If true the dataset WILL NOT interpolate the parameters.
 func (sd *SelectDataset) Prepared(prepared bool) *SelectDataset {
@@ -56,37 +58,39 @@ func (sd *SelectDataset) Prepared(prepared bool) *SelectDataset {
 	return ret
 }
 
+// IsPrepared returns whether the SelectDataset is prepared or not.
 func (sd *SelectDataset) IsPrepared() bool {
 	return sd.isPrepared.Bool()
 }
 
-// Returns the current adapter on the dataset
+// Dialect returns the current adapter on the SelectDataset.
 func (sd *SelectDataset) Dialect() SQLDialect {
 	return sd.dialect
 }
 
-// Returns the current adapter on the dataset
+// SetDialect returns the current adapter on the SelectDataset.
 func (sd *SelectDataset) SetDialect(dialect SQLDialect) *SelectDataset {
 	cd := sd.copy(sd.GetClauses())
 	cd.dialect = dialect
 	return cd
 }
 
+// Expression returns SelectDataset as exp.Expression.
 func (sd *SelectDataset) Expression() exp.Expression {
 	return sd
 }
 
-// Clones the dataset
+// Clone clones the SelectDataset.
 func (sd *SelectDataset) Clone() exp.Expression {
 	return sd.copy(sd.clauses)
 }
 
-// Returns the current clauses on the dataset.
+// GetClauses returns the current clauses on the SelectDataset.
 func (sd *SelectDataset) GetClauses() exp.SelectClauses {
 	return sd.clauses
 }
 
-// used interally to copy the dataset
+// used internally to copy the SelectDataset.
 func (sd *SelectDataset) copy(clauses exp.SelectClauses) *SelectDataset {
 	return &SelectDataset{
 		dialect:      sd.dialect,
@@ -97,8 +101,8 @@ func (sd *SelectDataset) copy(clauses exp.SelectClauses) *SelectDataset {
 	}
 }
 
-// Creates a new UpdateDataset using the FROM of this dataset. This method will also copy over the `WITH`, `WHERE`,
-// `ORDER , and `LIMIT`
+// Update creates a new UpdateDataset using the FROM of this SelectDataset.
+// This method will also copy over the `WITH`, `WHERE`, `ORDER , and `LIMIT`.
 func (sd *SelectDataset) Update() *UpdateDataset {
 	u := newUpdateDataset(sd.dialect.Dialect(), sd.queryFactory).
 		Prepared(sd.isPrepared.Bool())
@@ -124,8 +128,8 @@ func (sd *SelectDataset) Update() *UpdateDataset {
 	return u
 }
 
-// Creates a new InsertDataset using the FROM of this dataset. This method will also copy over the `WITH` clause to the
-// insert.
+// Insert creates a new InsertDataset using the FROM of this SelectDataset.
+// This method will also copy over the `WITH` clause to the insert.
 func (sd *SelectDataset) Insert() *InsertDataset {
 	i := newInsertDataset(sd.dialect.Dialect(), sd.queryFactory).
 		Prepared(sd.isPrepared.Bool())
@@ -140,8 +144,8 @@ func (sd *SelectDataset) Insert() *InsertDataset {
 	return i
 }
 
-// Creates a new DeleteDataset using the FROM of this dataset. This method will also copy over the `WITH`, `WHERE`,
-// `ORDER , and `LIMIT`
+// Delete creates a new DeleteDataset using the FROM of this SelectDataset.
+// This method will also copy over the `WITH`, `WHERE`, `ORDER , and `LIMIT`.
 func (sd *SelectDataset) Delete() *DeleteDataset {
 	d := newDeleteDataset(sd.dialect.Dialect(), sd.queryFactory).
 		Prepared(sd.isPrepared.Bool())
@@ -167,7 +171,7 @@ func (sd *SelectDataset) Delete() *DeleteDataset {
 	return d
 }
 
-// Creates a new TruncateDataset using the FROM of this dataset.
+// Truncate creates a new TruncateDataset using the FROM of this SelectDataset.
 func (sd *SelectDataset) Truncate() *TruncateDataset {
 	td := newTruncateDataset(sd.dialect.Dialect(), sd.queryFactory)
 	if sd.clauses.HasSources() {
@@ -176,7 +180,7 @@ func (sd *SelectDataset) Truncate() *TruncateDataset {
 	return td
 }
 
-// Creates a WITH clause for a common table expression (CTE).
+// With creates a WITH clause for a common table expression (CTE).
 //
 // The name will be available to SELECT from in the associated query; and can optionally
 // contain a list of column names "name(col1, col2, col3)".
@@ -186,7 +190,7 @@ func (sd *SelectDataset) With(name string, subquery exp.Expression) *SelectDatas
 	return sd.copy(sd.clauses.CommonTablesAppend(exp.NewCommonTableExpression(false, name, subquery)))
 }
 
-// Creates a WITH RECURSIVE clause for a common table expression (CTE)
+// WithRecursive creates a WITH RECURSIVE clause for a common table expression (CTE).
 //
 // The name will be available to SELECT from in the associated query; and must
 // contain a list of column names "name(col1, col2, col3)" for a recursive clause.
@@ -198,15 +202,15 @@ func (sd *SelectDataset) WithRecursive(name string, subquery exp.Expression) *Se
 	return sd.copy(sd.clauses.CommonTablesAppend(exp.NewCommonTableExpression(true, name, subquery)))
 }
 
-// Adds columns to the SELECT clause. See examples
+// Select adds columns to the SELECT clause.
 // You can pass in the following.
-//   string: Will automatically be turned into an identifier
-//   Dataset: Will use the SQL generated from that Dataset. If the dataset is aliased it will use that alias as the
-//   column name.
-//   LiteralExpression: (See Literal) Will use the literal SQL
-//   SQLFunction: (See Func, MIN, MAX, COUNT....)
-//   Struct: If passing in an instance of a struct, we will parse the struct for the column names to select.
-//   See examples
+//
+// string: Will automatically be turned into an identifier.
+// Dataset: Will use the SQL generated from that Dataset. If the dataset is aliased it will use that alias as the
+// column name.
+// LiteralExpression: (See Literal) Will use the literal SQL.
+// SQLFunction: (See Func, MIN, MAX, COUNT....)
+// Struct: If passing in an instance of a struct, we will parse the struct for the column names to select.
 func (sd *SelectDataset) Select(selects ...interface{}) *SelectDataset {
 	if len(selects) == 0 {
 		return sd.ClearSelect()
@@ -214,37 +218,40 @@ func (sd *SelectDataset) Select(selects ...interface{}) *SelectDataset {
 	return sd.copy(sd.clauses.SetSelect(exp.NewColumnListExpression(selects...)))
 }
 
-// Adds columns to the SELECT DISTINCT clause. See examples
+// SelectDistinct adds columns to the SELECT DISTINCT clause.
 // You can pass in the following.
-//   string: Will automatically be turned into an identifier
-//   Dataset: Will use the SQL generated from that Dataset. If the dataset is aliased it will use that alias as the
-//   column name.
-//   LiteralExpression: (See Literal) Will use the literal SQL
-//   SQLFunction: (See Func, MIN, MAX, COUNT....)
-//   Struct: If passing in an instance of a struct, we will parse the struct for the column names to select.
-//   See examples
+//
+// string: Will automatically be turned into an identifier
+// Dataset: Will use the SQL generated from that Dataset. If the dataset is aliased it will use that alias as the
+// column name.
+// LiteralExpression: (See Literal) Will use the literal SQL
+// SQLFunction: (See Func, MIN, MAX, COUNT....)
+// Struct: If passing in an instance of a struct, we will parse the struct for the column names to select.
+//
 // Deprecated: Use Distinct() instead.
 func (sd *SelectDataset) SelectDistinct(selects ...interface{}) *SelectDataset {
 	if len(selects) == 0 {
 		cleared := sd.ClearSelect()
 		return cleared.copy(cleared.clauses.SetDistinct(nil))
 	}
-	return sd.copy(sd.clauses.SetSelect(exp.NewColumnListExpression(selects...)).SetDistinct(exp.NewColumnListExpression()))
+	return sd.copy(sd.clauses.SetSelect(exp.NewColumnListExpression(selects...)).
+		SetDistinct(exp.NewColumnListExpression()))
 }
 
-// Resets to SELECT *. If the SelectDistinct or Distinct was used the returned Dataset will have the the dataset set to SELECT *.
-// See examples.
+// ClearSelect resets to SELECT *.
+// If the SelectDistinct or Distinct was used the returned Dataset will have the dataset set to SELECT *.
 func (sd *SelectDataset) ClearSelect() *SelectDataset {
 	return sd.copy(sd.clauses.SetSelect(exp.NewColumnListExpression(exp.Star())).SetDistinct(nil))
 }
 
-// Adds columns to the SELECT clause. See examples
+// SelectAppend adds columns to the SELECT clause.
 // You can pass in the following.
-//   string: Will automatically be turned into an identifier
-//   Dataset: Will use the SQL generated from that Dataset. If the dataset is aliased it will use that alias as the
-//   column name.
-//   LiteralExpression: (See Literal) Will use the literal SQL
-//   SQLFunction: (See Func, MIN, MAX, COUNT....)
+//
+// string: Will automatically be turned into an identifier.
+// Dataset: Will use the SQL generated from that Dataset. If the dataset is aliased it will use that alias as the
+// column name.
+// LiteralExpression: (See Literal) Will use the literal SQL
+// SQLFunction: (See Func, MIN, MAX, COUNT....)
 func (sd *SelectDataset) SelectAppend(selects ...interface{}) *SelectDataset {
 	return sd.copy(sd.clauses.SelectAppend(exp.NewColumnListExpression(selects...)))
 }
@@ -253,11 +260,12 @@ func (sd *SelectDataset) Distinct(on ...interface{}) *SelectDataset {
 	return sd.copy(sd.clauses.SetDistinct(exp.NewColumnListExpression(on...)))
 }
 
-// Adds a FROM clause. This return a new dataset with the original sources replaced. See examples.
+// From adds a FROM clause. This return a new SelectDataset with the original sources replaced.
 // You can pass in the following.
-//   string: Will automatically be turned into an identifier
-//   Dataset: Will be added as a sub select. If the Dataset is not aliased it will automatically be aliased
-//   LiteralExpression: (See Literal) Will use the literal SQL
+//
+// string: Will automatically be turned into an identifier.
+// Dataset: Will be added as a sub select. If the Dataset is not aliased it will automatically be aliased.
+// LiteralExpression: (See Literal) Will use the literal SQL.
 func (sd *SelectDataset) From(from ...interface{}) *SelectDataset {
 	var sources []interface{}
 	numSources := 0
@@ -272,108 +280,108 @@ func (sd *SelectDataset) From(from ...interface{}) *SelectDataset {
 	return sd.copy(sd.clauses.SetFrom(exp.NewColumnListExpression(sources...)))
 }
 
-// Returns a new Dataset with the current one as an source. If the current Dataset is not aliased (See Dataset#As) then
-// it will automatically be aliased. See examples.
+// FromSelf returns a new SelectDataset with the current one as a source.
+// If the current SelectDataset is not aliased (See Dataset#As) then it will automatically be aliased.
 func (sd *SelectDataset) FromSelf() *SelectDataset {
 	return sd.copy(exp.NewSelectClauses()).From(sd)
 }
 
-// Alias to InnerJoin. See examples.
+// Join alias to InnerJoin.
 func (sd *SelectDataset) Join(table exp.Expression, condition exp.JoinCondition) *SelectDataset {
 	return sd.InnerJoin(table, condition)
 }
 
-// Adds an INNER JOIN clause. See examples.
+// InnerJoin adds an INNER JOIN clause.
 func (sd *SelectDataset) InnerJoin(table exp.Expression, condition exp.JoinCondition) *SelectDataset {
 	return sd.joinTable(exp.NewConditionedJoinExpression(exp.InnerJoinType, table, condition))
 }
 
-// Adds a FULL OUTER JOIN clause. See examples.
+// FullOuterJoin adds a FULL OUTER JOIN clause.
 func (sd *SelectDataset) FullOuterJoin(table exp.Expression, condition exp.JoinCondition) *SelectDataset {
 	return sd.joinTable(exp.NewConditionedJoinExpression(exp.FullOuterJoinType, table, condition))
 }
 
-// Adds a RIGHT OUTER JOIN clause. See examples.
+// RightOuterJoin adds a RIGHT OUTER JOIN clause.
 func (sd *SelectDataset) RightOuterJoin(table exp.Expression, condition exp.JoinCondition) *SelectDataset {
 	return sd.joinTable(exp.NewConditionedJoinExpression(exp.RightOuterJoinType, table, condition))
 }
 
-// Adds a LEFT OUTER JOIN clause. See examples.
+// LeftOuterJoin adds a LEFT OUTER JOIN clause.
 func (sd *SelectDataset) LeftOuterJoin(table exp.Expression, condition exp.JoinCondition) *SelectDataset {
 	return sd.joinTable(exp.NewConditionedJoinExpression(exp.LeftOuterJoinType, table, condition))
 }
 
-// Adds a FULL JOIN clause. See examples.
+// FullJoin adds a FULL JOIN clause.
 func (sd *SelectDataset) FullJoin(table exp.Expression, condition exp.JoinCondition) *SelectDataset {
 	return sd.joinTable(exp.NewConditionedJoinExpression(exp.FullJoinType, table, condition))
 }
 
-// Adds a RIGHT JOIN clause. See examples.
+// RightJoin adds a RIGHT JOIN clause.
 func (sd *SelectDataset) RightJoin(table exp.Expression, condition exp.JoinCondition) *SelectDataset {
 	return sd.joinTable(exp.NewConditionedJoinExpression(exp.RightJoinType, table, condition))
 }
 
-// Adds a LEFT JOIN clause. See examples.
+// LeftJoin adds a LEFT JOIN clause.
 func (sd *SelectDataset) LeftJoin(table exp.Expression, condition exp.JoinCondition) *SelectDataset {
 	return sd.joinTable(exp.NewConditionedJoinExpression(exp.LeftJoinType, table, condition))
 }
 
-// Adds a NATURAL JOIN clause. See examples.
+// NaturalJoin adds a NATURAL JOIN clause.
 func (sd *SelectDataset) NaturalJoin(table exp.Expression) *SelectDataset {
 	return sd.joinTable(exp.NewUnConditionedJoinExpression(exp.NaturalJoinType, table))
 }
 
-// Adds a NATURAL LEFT JOIN clause. See examples.
+// NaturalLeftJoin adds a NATURAL LEFT JOIN clause.
 func (sd *SelectDataset) NaturalLeftJoin(table exp.Expression) *SelectDataset {
 	return sd.joinTable(exp.NewUnConditionedJoinExpression(exp.NaturalLeftJoinType, table))
 }
 
-// Adds a NATURAL RIGHT JOIN clause. See examples.
+// NaturalRightJoin adds a NATURAL RIGHT JOIN clause.
 func (sd *SelectDataset) NaturalRightJoin(table exp.Expression) *SelectDataset {
 	return sd.joinTable(exp.NewUnConditionedJoinExpression(exp.NaturalRightJoinType, table))
 }
 
-// Adds a NATURAL FULL JOIN clause. See examples.
+// NaturalFullJoin adds a NATURAL FULL JOIN clause.
 func (sd *SelectDataset) NaturalFullJoin(table exp.Expression) *SelectDataset {
 	return sd.joinTable(exp.NewUnConditionedJoinExpression(exp.NaturalFullJoinType, table))
 }
 
-// Adds a CROSS JOIN clause. See examples.
+// CrossJoin adds a CROSS JOIN clause.
 func (sd *SelectDataset) CrossJoin(table exp.Expression) *SelectDataset {
 	return sd.joinTable(exp.NewUnConditionedJoinExpression(exp.CrossJoinType, table))
 }
 
-// Joins this Datasets table with another
+// Joins this Datasets table with another.
 func (sd *SelectDataset) joinTable(join exp.JoinExpression) *SelectDataset {
 	return sd.copy(sd.clauses.JoinsAppend(join))
 }
 
-// Adds a WHERE clause. See examples.
+// Where adds a WHERE clause.
 func (sd *SelectDataset) Where(expressions ...exp.Expression) *SelectDataset {
 	return sd.copy(sd.clauses.WhereAppend(expressions...))
 }
 
-// Removes the WHERE clause. See examples.
+// ClearWhere removes the WHERE clause.
 func (sd *SelectDataset) ClearWhere() *SelectDataset {
 	return sd.copy(sd.clauses.ClearWhere())
 }
 
-// Adds a FOR UPDATE clause. See examples.
+// ForUpdate adds a FOR UPDATE clause.
 func (sd *SelectDataset) ForUpdate(waitOption exp.WaitOption, of ...exp.IdentifierExpression) *SelectDataset {
 	return sd.withLock(exp.ForUpdate, waitOption, of...)
 }
 
-// Adds a FOR NO KEY UPDATE clause. See examples.
+// ForNoKeyUpdate adds a FOR NO KEY UPDATE clause.
 func (sd *SelectDataset) ForNoKeyUpdate(waitOption exp.WaitOption, of ...exp.IdentifierExpression) *SelectDataset {
 	return sd.withLock(exp.ForNoKeyUpdate, waitOption, of...)
 }
 
-// Adds a FOR KEY SHARE clause. See examples.
+// ForKeyShare adds a FOR KEY SHARE clause.
 func (sd *SelectDataset) ForKeyShare(waitOption exp.WaitOption, of ...exp.IdentifierExpression) *SelectDataset {
 	return sd.withLock(exp.ForKeyShare, waitOption, of...)
 }
 
-// Adds a FOR SHARE clause. See examples.
+// ForShare adds a FOR SHARE clause.
 func (sd *SelectDataset) ForShare(waitOption exp.WaitOption, of ...exp.IdentifierExpression) *SelectDataset {
 	return sd.withLock(exp.ForShare, waitOption, of...)
 }
@@ -382,44 +390,44 @@ func (sd *SelectDataset) withLock(strength exp.LockStrength, option exp.WaitOpti
 	return sd.copy(sd.clauses.SetLock(exp.NewLock(strength, option, of...)))
 }
 
-// Adds a GROUP BY clause. See examples.
+// GroupBy adds a GROUP BY clause.
 func (sd *SelectDataset) GroupBy(groupBy ...interface{}) *SelectDataset {
 	return sd.copy(sd.clauses.SetGroupBy(exp.NewColumnListExpression(groupBy...)))
 }
 
-// Adds more columns to the current GROUP BY clause. See examples.
+// GroupByAppend adds more columns to the current GROUP BY clause.
 func (sd *SelectDataset) GroupByAppend(groupBy ...interface{}) *SelectDataset {
 	return sd.copy(sd.clauses.GroupByAppend(exp.NewColumnListExpression(groupBy...)))
 }
 
-// Adds a HAVING clause. See examples.
+// Having adds a HAVING clause.
 func (sd *SelectDataset) Having(expressions ...exp.Expression) *SelectDataset {
 	return sd.copy(sd.clauses.HavingAppend(expressions...))
 }
 
-// Adds a ORDER clause. If the ORDER is currently set it replaces it. See examples.
+// Order adds a ORDER clause. If the ORDER is currently set it replaces it.
 func (sd *SelectDataset) Order(order ...exp.OrderedExpression) *SelectDataset {
 	return sd.copy(sd.clauses.SetOrder(order...))
 }
 
-// Adds a more columns to the current ORDER BY clause. If no order has be previously specified it is the same as
-// calling Order. See examples.
+// OrderAppend adds a more columns to the current ORDER BY clause.
+// If no order has been previously specified it is the same as calling Order.
 func (sd *SelectDataset) OrderAppend(order ...exp.OrderedExpression) *SelectDataset {
 	return sd.copy(sd.clauses.OrderAppend(order...))
 }
 
-// Adds a more columns to the beginning of the current ORDER BY clause. If no order has be previously specified it is the same as
-// calling Order. See examples.
+// OrderPrepend adds a more columns to the beginning of the current ORDER BY clause.
+// If no order has been previously specified it is the same as calling Order.
 func (sd *SelectDataset) OrderPrepend(order ...exp.OrderedExpression) *SelectDataset {
 	return sd.copy(sd.clauses.OrderPrepend(order...))
 }
 
-// Removes the ORDER BY clause. See examples.
+// ClearOrder removes the ORDER BY clause.
 func (sd *SelectDataset) ClearOrder() *SelectDataset {
 	return sd.copy(sd.clauses.ClearOrder())
 }
 
-// Adds a LIMIT clause. If the LIMIT is currently set it replaces it. See examples.
+// Limit adds a LIMIT clause. If the LIMIT is currently set it replaces it.
 func (sd *SelectDataset) Limit(limit uint) *SelectDataset {
 	if limit > 0 {
 		return sd.copy(sd.clauses.SetLimit(limit))
@@ -427,50 +435,50 @@ func (sd *SelectDataset) Limit(limit uint) *SelectDataset {
 	return sd.copy(sd.clauses.ClearLimit())
 }
 
-// Adds a LIMIT ALL clause. If the LIMIT is currently set it replaces it. See examples.
+// LimitAll adds a LIMIT ALL clause. If the LIMIT is currently set it replaces it.
 func (sd *SelectDataset) LimitAll() *SelectDataset {
 	return sd.copy(sd.clauses.SetLimit(L("ALL")))
 }
 
-// Removes the LIMIT clause.
+// ClearLimit removes the LIMIT clause.
 func (sd *SelectDataset) ClearLimit() *SelectDataset {
 	return sd.copy(sd.clauses.ClearLimit())
 }
 
-// Adds an OFFSET clause. If the OFFSET is currently set it replaces it. See examples.
+// Offset adds an OFFSET clause. If the OFFSET is currently set it replaces it.
 func (sd *SelectDataset) Offset(offset uint) *SelectDataset {
 	return sd.copy(sd.clauses.SetOffset(offset))
 }
 
-// Removes the OFFSET clause from the Dataset
+// ClearOffset removes the OFFSET clause from the Dataset.
 func (sd *SelectDataset) ClearOffset() *SelectDataset {
 	return sd.copy(sd.clauses.ClearOffset())
 }
 
-// Creates an UNION statement with another dataset.
-// If this or the other dataset has a limit or offset it will use that dataset as a subselect in the FROM clause.
-// See examples.
+// Union creates a UNION statement with another SelectDataset.
+// If this or the other SelectDataset has a limit or offset
+// it will use that SelectDataset as a sub-select in the FROM clause.
 func (sd *SelectDataset) Union(other *SelectDataset) *SelectDataset {
 	return sd.withCompound(exp.UnionCompoundType, other.CompoundFromSelf())
 }
 
-// Creates an UNION ALL statement with another dataset.
-// If this or the other dataset has a limit or offset it will use that dataset as a subselect in the FROM clause.
-// See examples.
+// UnionAll creates a UNION ALL statement with another SelectDataset.
+// If this or the other SelectDataset has a limit or offset
+// it will use that dataset as a sub-select in the FROM clause.
 func (sd *SelectDataset) UnionAll(other *SelectDataset) *SelectDataset {
 	return sd.withCompound(exp.UnionAllCompoundType, other.CompoundFromSelf())
 }
 
-// Creates an INTERSECT statement with another dataset.
-// If this or the other dataset has a limit or offset it will use that dataset as a subselect in the FROM clause.
-// See examples.
+// Intersect creates an INTERSECT statement with another SelectDataset.
+// If this or the other SelectDataset has a limit or offset
+// it will use that dataset as a sub-select in the FROM clause.
 func (sd *SelectDataset) Intersect(other *SelectDataset) *SelectDataset {
 	return sd.withCompound(exp.IntersectCompoundType, other.CompoundFromSelf())
 }
 
-// Creates an INTERSECT ALL statement with another dataset.
-// If this or the other dataset has a limit or offset it will use that dataset as a subselect in the FROM clause.
-// See examples.
+// IntersectAll creates an INTERSECT ALL statement with another SelectDataset.
+// If this or the other SelectDataset has a limit or offset
+// it will use that dataset as a sub-select in the FROM clause.
 func (sd *SelectDataset) IntersectAll(other *SelectDataset) *SelectDataset {
 	return sd.withCompound(exp.IntersectAllCompoundType, other.CompoundFromSelf())
 }
@@ -482,8 +490,8 @@ func (sd *SelectDataset) withCompound(ct exp.CompoundType, other exp.AppendableE
 	return ret
 }
 
-// Used internally to determine if the dataset needs to use iteself as a source.
-// If the dataset has an order or limit it will select from itself
+// CompoundFromSelf determines if the SelectDataset needs to use itself as a source.
+// If the SelectDataset has an order or limit it will select from itself.
 func (sd *SelectDataset) CompoundFromSelf() *SelectDataset {
 	if sd.clauses.HasOrder() || sd.clauses.HasLimit() {
 		return sd.FromSelf()
@@ -491,39 +499,39 @@ func (sd *SelectDataset) CompoundFromSelf() *SelectDataset {
 	return sd.copy(sd.clauses)
 }
 
-// Sets the alias for this dataset. This is typically used when using a Dataset as a subselect. See examples.
+// As sets the alias for this SelectDataset. This is typically used when using a Dataset as a sub-select.
 func (sd *SelectDataset) As(alias string) *SelectDataset {
 	return sd.copy(sd.clauses.SetAlias(T(alias)))
 }
 
-// Returns the alias value as an identiier expression
+// GetAs returns the alias value as an identifier expression.
 func (sd *SelectDataset) GetAs() exp.IdentifierExpression {
 	return sd.clauses.Alias()
 }
 
-// Sets the WINDOW clauses
+// Window returns the WINDOW clauses.
 func (sd *SelectDataset) Window(ws ...exp.WindowExpression) *SelectDataset {
 	return sd.copy(sd.clauses.SetWindows(ws))
 }
 
-// Sets the WINDOW clauses
+// WindowAppend sets the WINDOW clauses.
 func (sd *SelectDataset) WindowAppend(ws ...exp.WindowExpression) *SelectDataset {
 	return sd.copy(sd.clauses.WindowsAppend(ws...))
 }
 
-// Sets the WINDOW clauses
+// ClearWindow clears the WINDOW clauses.
 func (sd *SelectDataset) ClearWindow() *SelectDataset {
 	return sd.copy(sd.clauses.ClearWindows())
 }
 
-// Get any error that has been set or nil if no error has been set.
+// Error returns any error that has been set or nil if no error has been set.
 func (sd *SelectDataset) Error() error {
 	return sd.err
 }
 
-// Set an error on the dataset if one has not already been set. This error will be returned by a future call to Error
-// or as part of ToSQL. This can be used by end users to record errors while building up queries without having to
-// track those separately.
+// SetError sets an error on the dataset if one has not already been set.
+// This error will be returned by a future call to Error or as part of ToSQL.
+// This can be used by end users to record errors while building up queries without having to track those separately.
 func (sd *SelectDataset) SetError(err error) *SelectDataset {
 	if sd.err == nil {
 		sd.err = err
@@ -532,24 +540,34 @@ func (sd *SelectDataset) SetError(err error) *SelectDataset {
 	return sd
 }
 
-// Generates a SELECT sql statement, if Prepared has been called with true then the parameters will not be interpolated.
-// See examples.
+// ToSQL generates a SELECT sql statement,
+// if Prepared has been called with true then the parameters will not be interpolated.
 //
 // Errors:
-//  * There is an error generating the SQL
+//   - There is an error generating the SQL
 func (sd *SelectDataset) ToSQL() (sql string, params []interface{}, err error) {
 	return sd.selectSQLBuilder().ToSQL()
 }
 
-// Generates the SELECT sql, and returns an Exec struct with the sql set to the SELECT statement
-//    db.From("test").Select("col").Executor()
+// MustToSQL does the same as ToSQL, but panics instead of returning an error.
+func (sd *SelectDataset) MustToSQL() (sql string, params []interface{}) {
+	var err error
+	if sql, params, err = sd.selectSQLBuilder().ToSQL(); err != nil {
+		panic(err)
+	}
+	return
+}
+
+// Executor generates the SELECT sql, and returns an Exec struct with the sql set to the SELECT statement
+//
+// db.From("test").Select("col").Executor()
 //
 // See Dataset#ToUpdateSQL for arguments
 func (sd *SelectDataset) Executor() exec.QueryExecutor {
 	return sd.queryFactory.FromSQLBuilder(sd.selectSQLBuilder())
 }
 
-// Appends this Dataset's SELECT statement to the SQLBuilder
+// AppendSQL appends this SelectDataset's SELECT statement to the SQLBuilder
 // This is used internally for sub-selects by the dialect
 func (sd *SelectDataset) AppendSQL(b sb.SQLBuilder) {
 	if sd.err != nil {
@@ -559,27 +577,29 @@ func (sd *SelectDataset) AppendSQL(b sb.SQLBuilder) {
 	sd.dialect.ToSelectSQL(b, sd.GetClauses())
 }
 
+// ReturnsColumns returns whether the SelectDataset has returning columns or not.
 func (sd *SelectDataset) ReturnsColumns() bool {
 	return true
 }
 
-// Generates the SELECT sql for this dataset and uses Exec#ScanStructs to scan the results into a slice of structs.
+// ScanStructs generates the SELECT sql for this SelectDataset and
+// uses Exec#ScanStructs to scan the results into a slice of structs.
 //
 // ScanStructs will only select the columns that can be scanned in to the struct unless you have explicitly selected
-// certain columns. See examples.
+// certain columns.
 //
-// i: A pointer to a slice of structs
+// i: A pointer to a slice of structs.
 func (sd *SelectDataset) ScanStructs(i interface{}) error {
 	return sd.ScanStructsContext(context.Background(), i)
 }
 
-// Generates the SELECT sql for this dataset and uses Exec#ScanStructsContext to scan the results into a slice of
-// structs.
+// ScanStructsContext generates the SELECT sql for this SelectDataset and
+// uses Exec#ScanStructsContext to scan the results into a slice of structs.
 //
 // ScanStructsContext will only select the columns that can be scanned in to the struct unless you have explicitly
-// selected certain columns. See examples.
+// selected certain columns.
 //
-// i: A pointer to a slice of structs
+// i: A pointer to a slice of structs.
 func (sd *SelectDataset) ScanStructsContext(ctx context.Context, i interface{}) error {
 	if sd.queryFactory == nil {
 		return ErrQueryFactoryNotFoundError
@@ -591,22 +611,24 @@ func (sd *SelectDataset) ScanStructsContext(ctx context.Context, i interface{}) 
 	return ds.Executor().ScanStructsContext(ctx, i)
 }
 
-// Generates the SELECT sql for this dataset and uses Exec#ScanStruct to scan the result into a slice of structs
+// ScanStruct generates the SELECT sql for this SelectDataset and
+// uses Exec#ScanStruct to scan the result into a slice of structs
 //
 // ScanStruct will only select the columns that can be scanned in to the struct unless you have explicitly selected
-// certain columns. See examples.
+// certain columns.
 //
-// i: A pointer to a structs
+// i: A pointer to a structs.
 func (sd *SelectDataset) ScanStruct(i interface{}) (bool, error) {
 	return sd.ScanStructContext(context.Background(), i)
 }
 
-// Generates the SELECT sql for this dataset and uses Exec#ScanStructContext to scan the result into a slice of structs
+// ScanStructContext generates the SELECT sql for this SelectDataset and
+// uses Exec#ScanStructContext to scan the result into a slice of structs
 //
 // ScanStructContext will only select the columns that can be scanned in to the struct unless you have explicitly
-// selected certain columns. See examples.
+// selected certain columns.
 //
-// i: A pointer to a structs
+// i: A pointer to a structs.
 func (sd *SelectDataset) ScanStructContext(ctx context.Context, i interface{}) (bool, error) {
 	if sd.queryFactory == nil {
 		return false, ErrQueryFactoryNotFoundError
@@ -618,17 +640,18 @@ func (sd *SelectDataset) ScanStructContext(ctx context.Context, i interface{}) (
 	return ds.Limit(1).Executor().ScanStructContext(ctx, i)
 }
 
-// Generates the SELECT sql for this dataset and uses Exec#ScanVals to scan the results into a slice of primitive values
+// ScanVals generates the SELECT sql for this SelectDataset and
+// uses Exec#ScanVals to scan the results into a slice of primitive values.
 //
-// i: A pointer to a slice of primitive values
+// i: A pointer to a slice of primitive values.
 func (sd *SelectDataset) ScanVals(i interface{}) error {
 	return sd.ScanValsContext(context.Background(), i)
 }
 
-// Generates the SELECT sql for this dataset and uses Exec#ScanValsContext to scan the results into a slice of primitive
-// values
+// ScanValsContext generates the SELECT sql for this SelectDataset and
+// uses Exec#ScanValsContext to scan the results into a slice of primitive values
 //
-// i: A pointer to a slice of primitive values
+// i: A pointer to a slice of primitive values.
 func (sd *SelectDataset) ScanValsContext(ctx context.Context, i interface{}) error {
 	if sd.queryFactory == nil {
 		return ErrQueryFactoryNotFoundError
@@ -636,16 +659,18 @@ func (sd *SelectDataset) ScanValsContext(ctx context.Context, i interface{}) err
 	return sd.Executor().ScanValsContext(ctx, i)
 }
 
-// Generates the SELECT sql for this dataset and uses Exec#ScanVal to scan the result into a primitive value
+// ScanVal generates the SELECT sql for this SelectDataset and
+// uses Exec#ScanVal to scan the result into a primitive value.
 //
-// i: A pointer to a primitive value
+// i: A pointer to a primitive value.
 func (sd *SelectDataset) ScanVal(i interface{}) (bool, error) {
 	return sd.ScanValContext(context.Background(), i)
 }
 
-// Generates the SELECT sql for this dataset and uses Exec#ScanValContext to scan the result into a primitive value
+// ScanValContext Generates the SELECT sql for this SelectDataset
+// and uses Exec#ScanValContext to scan the result into a primitive value.
 //
-// i: A pointer to a primitive value
+// i: A pointer to a primitive value.
 func (sd *SelectDataset) ScanValContext(ctx context.Context, i interface{}) (bool, error) {
 	if sd.queryFactory == nil {
 		return false, ErrQueryFactoryNotFoundError
@@ -653,34 +678,36 @@ func (sd *SelectDataset) ScanValContext(ctx context.Context, i interface{}) (boo
 	return sd.Limit(1).Executor().ScanValContext(ctx, i)
 }
 
-// Generates the SELECT COUNT(*) sql for this dataset and uses Exec#ScanVal to scan the result into an int64.
+// Count generates the SELECT COUNT(*) sql for this SelectDataset
+// and uses Exec#ScanVal to scan the result into an int64.
 func (sd *SelectDataset) Count() (int64, error) {
 	return sd.CountContext(context.Background())
 }
 
-// Generates the SELECT COUNT(*) sql for this dataset and uses Exec#ScanValContext to scan the result into an int64.
+// CountContext generates the SELECT COUNT(*) sql for this SelectDataset
+// and uses Exec#ScanValContext to scan the result into an int64.
 func (sd *SelectDataset) CountContext(ctx context.Context) (int64, error) {
 	var count int64
 	_, err := sd.Select(COUNT(Star()).As("count")).ScanValContext(ctx, &count)
 	return count, err
 }
 
-// Generates the SELECT sql only selecting the passed in column and uses Exec#ScanVals to scan the result into a slice
-// of primitive values.
+// Pluck generates the SELECT sql only selecting the passed in column
+// and uses Exec#ScanVals to scan the result into a slice of primitive values.
 //
-// i: A slice of primitive values
+// i: A slice of primitive values.
 //
-// col: The column to select when generative the SQL
+// col: The column to select when generative the SQL.
 func (sd *SelectDataset) Pluck(i interface{}, col string) error {
 	return sd.PluckContext(context.Background(), i, col)
 }
 
-// Generates the SELECT sql only selecting the passed in column and uses Exec#ScanValsContext to scan the result into a
-// slice of primitive values.
+// PluckContext generates the SELECT sql only selecting the passed in column
+// and uses Exec#ScanValsContext to scan the result into a slice of primitive values.
 //
-// i: A slice of primitive values
+// i: A slice of primitive values.
 //
-// col: The column to select when generative the SQL
+// col: The column to select when generative the SQL.
 func (sd *SelectDataset) PluckContext(ctx context.Context, i interface{}, col string) error {
 	return sd.Select(col).ScanValsContext(ctx, i)
 }

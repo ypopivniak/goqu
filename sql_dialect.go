@@ -11,7 +11,7 @@ import (
 
 type (
 	SQLDialectOptions = sqlgen.SQLDialectOptions
-	// An adapter interface to be used by a Dataset to generate SQL for a specific dialect.
+	// SQLDialect an adapter interface to be used by a Dataset to generate SQL for a specific dialect.
 	// See DefaultAdapter for a concrete implementation and examples.
 	SQLDialect interface {
 		Dialect() string
